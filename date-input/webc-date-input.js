@@ -43,7 +43,6 @@ export default class WebcDateInput extends HTMLElement {
     }
     container.append(this.inputElement);
     this.append(container);
-    debugger;
     this.inputElement.addEventListener("keyup", this.editDateHandler.bind(this))
     this.inputElement.addEventListener("change", this.editDateHandler.bind(this))
     this.inputElement.addEventListener("focusout", this.focusOutHandler.bind(this))
