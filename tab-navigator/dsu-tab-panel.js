@@ -1,114 +1,145 @@
-import constants from "../../scripts/constants.js";
+const template = document.createElement('template');
 
-customElements.define(
-  "dsu-tab-panel",
-  class _ extends HTMLElement {
-    static observedAttributes = ["selected-index", "direction"];
-    #selectedIndex = 0;
-    #direction = "row";
+template.innerHTML = `
+<style>
+.tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
 
-    constructor() {
-      super();
-      this.bind(this);
-      this.render();
-      this.cacheDom();
-      this.attachEvents();
-      this.setAttribute("selectedIndex", this.#selectedIndex);
-      this.dom.tabs[this.#selectedIndex]?.classList.add("selected");
-      this.dom.contents[this.#selectedIndex]?.classList.add("selected");
-    }
+.tabs ::slotted(div[slot="tab"]) {
+    padding: 8px 16px !important;
+    user-select: none;
+    cursor: pointer;
+    background-color: #51AE8F;
+    font-size: 1rem;
+    color: white;
+    flex-grow: 1;
+    text-align: center;
+    line-height: 1.5;
+}
 
-    bind(element) {
-      element.render = element.render.bind(element);
-      element.attachEvents = element.attachEvents.bind(element);
-      element.cacheDom = element.cacheDom.bind(element);
-      element.onTabClick = element.onTabClick.bind(element);
-      element.selectTabByIndex = element.selectTabByIndex.bind(element);
-      element.onContentSlotChange = element.onContentSlotChange.bind(element);
-      element.onTabSlotChange = element.onTabSlotChange.bind(element);
-    }
+.tabs ::slotted(div[slot="tab"].selected) {
+    background-color: #328569;
+}
 
-    render() {
-      this.shadow = this.attachShadow({mode: "open"});
-      this.shadow.innerHTML = `
-                 <link rel="stylesheet" href="./components/tab-navigator/dsu-tab-panel.css">
-                <div class="tabs">
-                    <slot id="tab-slot" name="tab" class="tab-header"></slot>
-                </div>
-                <div class="tab-contents">
-                    <slot id="content-slot" name="content"></slot>
-                </div>
-            `;
-    }
+.tab-contents ::slotted(*) {
+    display: none;
+}
 
-    cacheDom() {
-      this.dom = {
-        tabSlot: this.shadow.querySelector("#tab-slot"),
-        contentSlot: this.shadow.querySelector("#content-slot")
-      };
-      this.dom.tabs = this.dom.tabSlot.assignedElements();
-      this.dom.contents = this.dom.contentSlot.assignedElements();
-    }
+.tab-contents ::slotted(.selected) {
+    display: block;
+    padding: 5px !important;
+}
 
-    attachEvents() {
-      this.dom.tabSlot.addEventListener(constants.HTML_EVENTS.CLICK, this.onTabClick);
-      this.dom.tabSlot.addEventListener(constants.HTML_EVENTS.SLOTCHANGE, this.onTabSlotChange);
-      this.dom.contentSlot.addEventListener(constants.HTML_EVENTS.SLOTCHANGE, this.onContentSlotChange);
-    }
+</style>
+ <div class="tabs">
+    <slot id="tab-slot" name="tab" class="tab-header"></slot> 
+ </div>
+ <div class="tab-contents">
+   <slot id="content-slot" name="content"></slot>
+ </div>
+`;
 
-    onTabSlotChange() {
-      this.dom.tabs = this.dom.tabSlot.assignedElements();
-    }
+export default class WebcTabNavigator extends HTMLElement {
+  static observedAttributes = ["selected-index", "direction"];
+  #selectedIndex = 0;
+  #direction = "row";
 
-    onContentSlotChange() {
-      this.dom.contents = this.dom.contentSlot.assignedElements();
-    }
+  constructor() {
+    super();
+    this.bind(this);
+    this.render();
+    this.cacheDom();
+    this.attachEvents();
+    this.setAttribute("selectedIndex", this.#selectedIndex);
+    this.dom.tabs[this.#selectedIndex]?.classList.add("selected");
+    this.dom.contents[this.#selectedIndex]?.classList.add("selected");
+  }
 
-    onTabClick(e) {
-      const target = e.target;
-      if (target.slot === "tab") {
-        const tabIndex = this.dom.tabs.indexOf(target);
-        this.selectTabByIndex(tabIndex);
-      }
-    }
+  bind(element) {
+    element.render = element.render.bind(element);
+    element.attachEvents = element.attachEvents.bind(element);
+    element.cacheDom = element.cacheDom.bind(element);
+    element.onTabClick = element.onTabClick.bind(element);
+    element.selectTabByIndex = element.selectTabByIndex.bind(element);
+    element.onContentSlotChange = element.onContentSlotChange.bind(element);
+    element.onTabSlotChange = element.onTabSlotChange.bind(element);
+  }
 
-    selectTabByIndex(index) {
-      const tab = this.dom.tabs[index];
-      const content = this.dom.contents[index];
-      this.setAttribute("selectedIndex", index);
-      if (!tab || !content) return;
-      this.dom.contents.forEach(p => p.classList.remove("selected"));
-      this.dom.tabs.forEach(p => p.classList.remove("selected"));
-      content.classList.add("selected");
-      tab.classList.add("selected");
+  render() {
+    this.shadow = this.attachShadow({mode: "open"});
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+  }
 
-    }
+  cacheDom() {
+    this.dom = {
+      tabSlot: this.shadow.querySelector("#tab-slot"),
+      contentSlot: this.shadow.querySelector("#content-slot")
+    };
+    this.dom.tabs = this.dom.tabSlot.assignedElements();
+    this.dom.contents = this.dom.contentSlot.assignedElements();
+  }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (oldValue !== newValue) {
-        if (name === "selected-index") {
-          this.selectedIndex = newValue;
-        } else {
-          this[name] = newValue;
-        }
-      }
-    }
+  attachEvents() {
+    this.dom.tabSlot.addEventListener("click", this.onTabClick);
+    this.dom.tabSlot.addEventListener("slotchange", this.onTabSlotChange);
+    this.dom.contentSlot.addEventListener("slotchange", this.onContentSlotChange);
+  }
 
-    set selectedIndex(value) {
-      this.#selectedIndex = value;
-    }
+  onTabSlotChange() {
+    this.dom.tabs = this.dom.tabSlot.assignedElements();
+  }
 
-    get selectedIndex() {
-      return this.#selectedIndex;
-    }
+  onContentSlotChange() {
+    this.dom.contents = this.dom.contentSlot.assignedElements();
+  }
 
-    set direction(value) {
-      this.#direction = value;
-      this.setAttribute("direction", value);
-    }
-
-    get direction() {
-      return this.#direction;
+  onTabClick(e) {
+    const target = e.target;
+    if (target.slot === "tab") {
+      const tabIndex = this.dom.tabs.indexOf(target);
+      this.selectTabByIndex(tabIndex);
     }
   }
-);
+
+  selectTabByIndex(index) {
+    const tab = this.dom.tabs[index];
+    const content = this.dom.contents[index];
+    this.setAttribute("selectedIndex", index);
+    if (!tab || !content) return;
+    this.dom.contents.forEach(p => p.classList.remove("selected"));
+    this.dom.tabs.forEach(p => p.classList.remove("selected"));
+    content.classList.add("selected");
+    tab.classList.add("selected");
+
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      if (name === "selected-index") {
+        this.selectedIndex = newValue;
+      } else {
+        this[name] = newValue;
+      }
+    }
+  }
+
+  set selectedIndex(value) {
+    this.#selectedIndex = value;
+  }
+
+  get selectedIndex() {
+    return this.#selectedIndex;
+  }
+
+  set direction(value) {
+    this.#direction = value;
+    this.setAttribute("direction", value);
+  }
+
+  get direction() {
+    return this.#direction;
+  }
+}
