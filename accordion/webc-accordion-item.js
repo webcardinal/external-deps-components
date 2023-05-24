@@ -5,10 +5,7 @@ template.innerHTML = `
 * {
   box-sizing: border-box;
 }
-.accordion-item {
- padding: 1em 1em 0.15em 1em;
- }
- 
+
  .accordion-item-title{
      padding: 0.45em 0.25em;
  }
@@ -29,9 +26,11 @@ template.innerHTML = `
     position: absolute;
     right: 20px;
     transition: all .3s ease;
+    transform: rotate(135deg);
 }
-.accordion-item-title:after {
-  transform: rotate(135deg);
+
+.accordion-item.active .accordion-item-title:after {
+  transform: rotate(45deg);
 }
 
 .accordion-item .accordion-item-content {
@@ -41,15 +40,13 @@ template.innerHTML = `
   transition: all .3s ease;
   overflow: hidden;
 }
-.accordion-item.active .accordion-item-title:after {
-  transform: rotate(45deg);
-}
+
 .accordion-item.active .accordion-item-content {
   height: 100%;
 }
 
 </style>
-<div class="accordion-item">
+<div class="accordion-item" part="acc-item-container">
     <div class="accordion-item-title" part="acc-item-title"><slot name="accordion-item-title"/></div>
     <div class="accordion-item-content" part="acc-item-content"><slot name="accordion-item-content"/></div>
 </div>
