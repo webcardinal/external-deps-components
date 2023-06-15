@@ -30,7 +30,7 @@ template.innerHTML = `
 
 .tab-contents ::slotted(.selected) {
     display: block;
-    padding: 5px !important;
+    padding: 5px;
 }
 
 </style>
