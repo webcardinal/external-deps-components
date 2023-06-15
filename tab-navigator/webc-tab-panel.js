@@ -9,7 +9,6 @@ template.innerHTML = `
 }
 
 .tabs ::slotted(div[slot="tab"]) {
-    padding: 8px 16px !important;
     user-select: none;
     cursor: pointer;
     background-color: #51AE8F;
@@ -38,7 +37,7 @@ template.innerHTML = `
     <slot id="tab-slot" name="tab" class="tab-header"></slot> 
  </div>
  <div class="tab-contents">
-   <slot id="content-slot" name="content"></slot>
+    <slot id="content-slot" name="content"></slot>
  </div>
 `;
 
@@ -56,6 +55,9 @@ export default class WebcTabNavigator extends HTMLElement {
     this.setAttribute("selectedIndex", this.#selectedIndex);
     this.dom.tabs[this.#selectedIndex]?.classList.add("selected");
     this.dom.contents[this.#selectedIndex]?.classList.add("selected");
+    this.dom.tabs.forEach(tabItem => {
+      tabItem.style.maxWidth = `${100 / this.dom.tabs.length}%`
+    })
   }
 
   bind(element) {
@@ -83,7 +85,10 @@ export default class WebcTabNavigator extends HTMLElement {
   }
 
   attachEvents() {
-    this.dom.tabSlot.addEventListener("click", this.onTabClick);
+    this.dom.tabs.forEach(tabItem => {
+      tabItem.addEventListener("click", this.onTabClick, {bubbles: true});
+    })
+
     this.dom.tabSlot.addEventListener("slotchange", this.onTabSlotChange);
     this.dom.contentSlot.addEventListener("slotchange", this.onContentSlotChange);
   }
@@ -97,11 +102,9 @@ export default class WebcTabNavigator extends HTMLElement {
   }
 
   onTabClick(e) {
-    const target = e.target;
-    if (target.slot === "tab") {
-      const tabIndex = this.dom.tabs.indexOf(target);
-      this.selectTabByIndex(tabIndex);
-    }
+    let tabIndex = this.dom.tabs.indexOf(e.currentTarget);
+    this.selectTabByIndex(tabIndex);
+
   }
 
   selectTabByIndex(index) {
