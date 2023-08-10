@@ -118,6 +118,10 @@ export default class WebcDateInput extends HTMLElement {
   focusOutHandler(event) {
     event.stopImmediatePropagation();
     let currentDate = event.target.value;
+    if (!currentDate) {
+      this.inputElement.removeAttribute("value");
+      this.inputElement.removeAttribute("data-date");
+    }
 
     if (currentDate && currentDate.trim().length) {
       const newValue = new Date(currentDate).getTime();
