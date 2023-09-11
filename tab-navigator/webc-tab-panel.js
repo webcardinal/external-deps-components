@@ -42,9 +42,8 @@ template.innerHTML = `
 `;
 
 export default class WebcTabNavigator extends HTMLElement {
-  static observedAttributes = ["selected-index", "direction"];
-  #selectedIndex = 0;
-  #direction = "row";
+  _selectedTabIndex = "0";
+  _direction = "row";
 
   constructor() {
     super();
@@ -52,9 +51,9 @@ export default class WebcTabNavigator extends HTMLElement {
     this.render();
     this.cacheDom();
     this.attachEvents();
-    this.setAttribute("selectedIndex", this.#selectedIndex);
-    this.dom.tabs[this.#selectedIndex]?.classList.add("selected");
-    this.dom.contents[this.#selectedIndex]?.classList.add("selected");
+    this.setAttribute("selectedTabIndex", this._selectedTabIndex);
+    this.dom.tabs[this._selectedTabIndex]?.classList.add("selected");
+    this.dom.contents[this._selectedTabIndex]?.classList.add("selected");
     this.dom.tabs.forEach(tabItem => {
       tabItem.style.maxWidth = `${100 / this.dom.tabs.length}%`
     })
@@ -103,46 +102,49 @@ export default class WebcTabNavigator extends HTMLElement {
 
   onTabClick(e) {
     let tabIndex = this.dom.tabs.indexOf(e.currentTarget);
-    this.selectTabByIndex(tabIndex);
-
+    this.setAttribute("selectedTabIndex", tabIndex);
   }
 
   selectTabByIndex(index) {
     const tab = this.dom.tabs[index];
     const content = this.dom.contents[index];
-    this.setAttribute("selectedIndex", index);
+
     if (!tab || !content) return;
     this.dom.contents.forEach(p => p.classList.remove("selected"));
     this.dom.tabs.forEach(p => p.classList.remove("selected"));
     content.classList.add("selected");
     tab.classList.add("selected");
-
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue !== newValue) {
-      if (name === "selected-index") {
-        this.selectedIndex = newValue;
-      } else {
-        this[name] = newValue;
-      }
+
+    if (name.toLowerCase() === "selectedtabindex") {
+      this.selectedTabIndex = newValue;
+    } else {
+      this[name] = newValue;
     }
+
   }
 
-  set selectedIndex(value) {
-    this.#selectedIndex = value;
+  static get observedAttributes() {
+    return ["selectedtabindex", "direction"];
   }
 
-  get selectedIndex() {
-    return this.#selectedIndex;
+  set selectedTabIndex(value) {
+    this._selectedTabIndex = value;
+    this.selectTabByIndex(value);
+  }
+
+  get selectedTabIndex() {
+    return this._selectedTabIndex;
   }
 
   set direction(value) {
-    this.#direction = value;
+    this._direction = value;
     this.setAttribute("direction", value);
   }
 
   get direction() {
-    return this.#direction;
+    return this._direction;
   }
 }
