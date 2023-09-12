@@ -1,32 +1,93 @@
 const YEAR_LEADING_ZEROS = {
-  0: '',
-  1: '0',
-  2: '00',
-  3: '000'
+  0: '', 1: '0', 2: '00', 3: '000'
 };
+const template = document.createElement('template');
 
+template.innerHTML = `
+<style>
+.form-group {
+    margin: 0px;
+    width: calc(100% + 25px);
+    position: relative;
+    }
+    
+ .form-control {
+    display: block;
+    width: 100%;
+    height: calc(1.5em + 0.75rem + 2px);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border: none;
+    background: none;
+    box-shadow: none;
+    padding: 0px;
+    outline: none;
+    resize: none;
+    overflow: auto;
+}
+.formated-date {
+    position: relative; 
+ } 
+ 
+.formated-date:before {
+    position: absolute;
+    top: 0.45rem;
+    content: attr(data-date);
+    display: inline-block;
+  }
+ .formated-date::-webkit-datetime-edit,
+ .formated-date::-webkit-inner-spin-button,
+ .formated-date::-webkit-clear-button {
+    display: none;
+ } 
+ .formated-date::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: calc(100% - 15px);
+    z-index: 1;
+ }
+ .formated-date[type="date"]::after {
+    content: '\\f073';
+    font-family: 'FontAwesome';
+    color: black;
+    font-weight: bolder;
+    position: absolute;
+    right: 15px;
+    top: 6px;
+}
+ .formated-date[type="month"]::after {
+    content: '\\f133';
+    font-family: 'FontAwesome';
+    color: black;
+    font-weight: bolder;
+    position: absolute;
+    right: 15px;
+    top: 6px;
+}
+ </style>
+ <div class="form-group" part="input-container">
+    <input class="form-control" part="input-element">
+ </div>
+    `;
 export default class WebcDateInput extends HTMLElement {
   constructor() {
     super();
     this._value = "";
-    let style = document.createElement('style');
-    style.innerHTML = `
-      .formated-date { position: relative; color:transparent!important;} 
-      .formated-date:before {  position: absolute;top: 0.45rem;content: attr(data-date);display: inline-block;color:#333333;}
-      .formated-date::-webkit-datetime-edit,
-      .formated-date::-webkit-inner-spin-button,
-      .formated-date::-webkit-clear-button {display: none;} 
-      .formated-date::-webkit-calendar-picker-indicator  {position: absolute;top: 0.41rem; right: 0.8rem; opacity: 1;}
-    `;
-    document.head.appendChild(style);
+    this.attachShadow({mode: 'open'});
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
   }
 
   async connectedCallback() {
-    const component = this.tagName.toLowerCase();
-    let container = document.createElement("div")
-    container.classList.add("form-group");
-    this.inputElement = document.createElement("input");
-    this.inputElement.classList.add("form-control");
+    this.inputElement = this.shadowRoot.querySelector("input");
+
     for (let i = 0; i < this.attributes.length; i++) {
       const {name, value} = this.attributes[i];
       if (name === "value") {
@@ -41,9 +102,7 @@ export default class WebcDateInput extends HTMLElement {
       this.inputElement.placeholder = "yyyy-mm";
 
     }
-    container.append(this.inputElement);
-    this.append(container);
-    debugger;
+
     this.inputElement.addEventListener("keyup", this.editDateHandler.bind(this))
     this.inputElement.addEventListener("change", this.editDateHandler.bind(this))
     this.inputElement.addEventListener("focusout", this.focusOutHandler.bind(this))
@@ -104,9 +163,7 @@ export default class WebcDateInput extends HTMLElement {
     year = `${YEAR_LEADING_ZEROS[leadingZeros]}${year}`;
 
     const dateVariables = {
-      "DD": day,
-      "MM": month,
-      "YYYY": year
+      "DD": day, "MM": month, "YYYY": year
     };
 
     let dateValue = "YYYY MM DD".split(' ')
@@ -115,19 +172,16 @@ export default class WebcDateInput extends HTMLElement {
 
     this.dataFormat = this.getAttribute("data-format");
 
-    const formattedDate = this.dataFormat
-      ? this.dataFormat.trim()
-        .split(/[ ,\/]+/)
-        .map((type) => dateVariables[type])
-        .join('/')
-      : dateValue;
+    const formattedDate = this.dataFormat ? this.dataFormat.trim()
+      .split(/[ ,\/]+/)
+      .map((type) => dateVariables[type])
+      .join('/') : dateValue;
 
     if (this.inputElement.getAttribute("type") === "month" && dateValue) {
       dateValue = dateValue.substring(0, dateValue.lastIndexOf("-"));
     }
     return {
-      dateToDisplay: formattedDate,
-      dateToAssign: dateValue
+      dateToDisplay: formattedDate, dateToAssign: dateValue
     };
   }
 
@@ -149,8 +203,7 @@ export default class WebcDateInput extends HTMLElement {
       M.splice(1, 1, tem[1]);
     }
     return {
-      name: M[0],
-      version: M[1]
+      name: M[0], version: M[1]
     };
   }
 
@@ -162,8 +215,7 @@ export default class WebcDateInput extends HTMLElement {
     this._value = value;
     if (this.inputElement && value) {
       let {
-        dateToDisplay,
-        dateToAssign
+        dateToDisplay, dateToAssign
       } = this.getFormattedDate();
       this.inputElement.setAttribute("data-date", dateToDisplay);
       this.inputElement.value = dateToAssign;
@@ -186,6 +238,3 @@ export default class WebcDateInput extends HTMLElement {
   }
 
 }
-
-
-
